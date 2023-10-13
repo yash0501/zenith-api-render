@@ -18,18 +18,20 @@ const db = new sqlite3.Database("./zenith.sqlite3", (err) => {
 app.get("/", (req, res) => res.type("html").send(html));
 
 app.get("/price", async (req, res) => {
-  const frame = req.query.frame;
-  const startTime = (
-    Math.floor(req.query.startTime / frame) * frame
-  ).toString();
-  const endTime = (Math.ceil(req.query.endTime / frame) * frame).toString();
+  const frame1 = parseInt(req.query.frame || 3600);
+  const start = parseInt(req.query.start || 0);
+  const end = parseInt(req.query.end || Math.ceil(new Date().getTime() / 1000));
+
+  const frame = frame1;
+  const startTime = (Math.floor(start / frame) * frame).toString();
+  const endTime = (Math.ceil(end / frame) * frame).toString();
 
   let bucketListKeys = new Set();
   let bucketList = {};
 
   let candles = [];
 
-  const sql = `SELECT * FROM marked_price WHERE strftime('%s', timestamp) BETWEEN ? AND ?`;
+  const sql = `SELECT * FROM marked_price WHERE strftime('%s', timestamp) >= ? AND strftime('%s', timestamp) <= ?`;
   db.all(sql, [startTime, endTime], (err, rows) => {
     if (err) {
       throw err;
@@ -49,7 +51,7 @@ app.get("/price", async (req, res) => {
       if (!bucketList[bucketIndex]) {
         bucketList[bucketIndex] = [];
       }
-      bucketList[bucketIndex].push(row.price);
+      bucketList[bucketIndex].push(parseInt(row.price));
     }
     bucketListKeys = Array.from(bucketListKeys);
 

@@ -137,6 +137,16 @@ app.get("/price", async (req, res) => {
   });
 });
 
+app.get("/pnl", async (req, res) => {
+  const sql = `SELECT * FROM pn_l WHERE status = 'close' ORDER BY timestamp DESC`;
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      throw err;
+    }
+    res.json(rows);
+  });
+});
+
 const server = app.listen(port, () =>
   console.log(`Example app listening on port ${port}!`)
 );
